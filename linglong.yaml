@@ -1,0 +1,64 @@
+version: "1"
+
+package:
+  id: com.windsurf.editor
+  name: Windsurf editor
+  version: 1.11.1.0
+  kind: app
+  description: |
+    The Windsurf Editor is built to keep you in flow state. Instant, invaluable
+    AI developer assistance where you want it, when you want it.
+
+command: [/opt/apps/com.windsurf.editor/files/share/windsurf/windsurf]
+
+base: org.deepin.base/25.2.0
+
+sources:
+  - kind: file
+    url: https://windsurf-stable.codeiumdata.com/wVxQEIWkwPUEAGf3/apt/pool/main/w/windsurf/Windsurf-linux-x64-1.11.1.deb
+    digest: 104c3b9e7fd7e2a9fb76035826f30abda4c9f0fc136e27940c31d7d395f9d5ea
+    name: windsurf.deb
+
+build: |
+  echo 'building...'
+
+  # prepare windsurf repo
+  #wget -qO- "https://windsurf-stable.codeiumdata.com/wVxQEIWkwPUEAGf3/windsurf.gpg" | gpg --dearmor > windsurf-stable.gpg
+  #install -D -o root -g root -m 644 windsurf-stable.gpg /etc/apt/keyrings/windsurf-stable.gpg
+  #echo "deb [arch=amd64 signed-by=/etc/apt/keyrings/windsurf-stable.gpg] https://windsurf-stable.codeiumdata.com/wVxQEIWkwPUEAGf3/apt stable main" | tee /etc/apt/sources.list.d/windsurf.list > /dev/null
+  #rm -f windsurf-stable.gpg
+
+  #apt update
+
+  #PACKAGE=$(apt download windsurf --print-uris | awk '{print $2}')
+  #apt download windsurf
+
+  #if [ ! -e $PACKAGE ]; then
+  #  echo "failed to download $PACKAGE"
+  #  exit 1
+  #fi
+
+  #dpkg-deb -R $PACKAGE windsurf
+
+  dpkg-deb -R /project/linglong/sources/windsurf.deb windsurf
+
+  # copy resource
+  cp -r windsurf/usr/share $PREFIX/
+
+  # desktop
+  sed -i -e 's#Exec=/usr/share/windsurf/windsurf#Exec=/opt/apps/com.windsurf.editor/files/share/windsurf/windsurf#' $PREFIX/share/applications/windsurf.desktop
+  sed -i -e 's#Exec=/usr/share/windsurf/windsurf#Exec=/opt/apps/com.windsurf.editor/files/share/windsurf/windsurf#' $PREFIX/share/applications/windsurf-url-handler.desktop
+
+  mv $PREFIX/share/applications/windsurf.desktop $PREFIX/share/applications/com.windsurf.editor.desktop
+  mv $PREFIX/share/applications/windsurf-url-handler.desktop $PREFIX/share/applications/com.windsurf.editor-url-handler.desktop
+
+  # icon
+  mkdir -p $PREFIX/share/icons/hicolor/512x512/apps
+  cp $PREFIX/share/pixmaps/windsurf.png $PREFIX/share/icons/hicolor/512x512/apps/
+
+  echo 'build done'
+
+buildext:
+  apt:
+    build_depends: [wget gpg]
+    depends: [libsecret-1-0]
